@@ -9,7 +9,8 @@ import argparse
 import focasifu as fi
 
 def MkBiasTemplate(filename, nsigma=4.0, rawdatadir='', overwrite=False):
-    hdulist = fits.open(rawdatadir + filename)
+    pathandfile = os.path.join(rawdatadir, filename)
+    hdulist = fits.open(pathandfile)
     detid = hdulist[0].header['DET-ID']
     binfac1 = hdulist[0].header['BIN-FCT1']  # X direction on DS9
     binfac2 = hdulist[0].header['BIN-FCT2']  # Y direction on DS9
@@ -36,7 +37,8 @@ def MkBiasTemplate(filename, nsigma=4.0, rawdatadir='', overwrite=False):
 
 def MkTwoBiasTemplate(filename, rawdatadir='', overwrite = False):
     MkBiasTemplate(filename, rawdatadir=rawdatadir, overwrite=overwrite)
-    basename = fits.getval(rawdatadir + filename, 'FRAMEID')
+    pathandfile = os.path.join(rawdatadir, filename)
+    basename = fits.getval(pathandfile, 'FRAMEID')
     filename2 = str('FCSA%08d.fits'%(int(basename[4:])+1))
     MkBiasTemplate(filename2, rawdatadir=rawdatadir, overwrite=overwrite)
     return

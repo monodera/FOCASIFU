@@ -21,7 +21,10 @@ def identify_gap(infile, overwrite=False):
     idfile = database + '/id' + os.path.splitext(infile)[0]
     if os.path.exists(idfile):
         if overwrite:
-            os.remove(idfile)
+            try:
+                os.remove(idfile)
+            except:
+                pass
         else:
             print('\t ID file already exists: '+idfile)
             print('\t This precedure is skipped.')

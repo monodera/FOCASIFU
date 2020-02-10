@@ -39,12 +39,6 @@ def std1dspec(infile, startz=2000, nsigma=5, overwrite=False):
                               
     hdl = fits.open(infile)
     hdr = hdl[0].header
-    basename = hdr['FRAMEID']
-    outfile = basename + '.1dspec.fits'
-    if os.path.isfile(outfile) and not overwrite:
-        print('\t 1D data already exits. '+outfile)
-        print('\t This procedure is skipped.')
-        return outfile, True
     
     scidata = hdl[0].data
     binfac1 = hdr['BIN-FCT1']
@@ -106,6 +100,7 @@ def std1dspec(infile, startz=2000, nsigma=5, overwrite=False):
     global coords, ii, std1ddata, lam
 
     std1ddata = np.zeros(scidata.shape[0], dtype=np.float32)
+    positions = np.zeros((scidata.shape[0], 2), dtype=np.float)
 
     # Aperture photometry with incleasing wavelength pix from startz 
     for i in range(startz,scidata.shape[0]):
@@ -119,9 +114,10 @@ def std1dspec(infile, startz=2000, nsigma=5, overwrite=False):
         if np.linalg.norm(position-position_pre) > 2.:
             print('\t Cetroid is not good at '+str(i)+' pix.')
             break
-        apertures = EllipticalAperture(position, a=a ,b=b,theta=theta)
-        phot_table = aperture_photometry(scidata[i,:,:], apertures)   
-        std1ddata[i] = phot_table['aperture_sum'].data[0]
+        positions[i,:] = position
+        #apertures = EllipticalAperture(position, a=a ,b=b,theta=theta)
+        #phot_table = aperture_photometry(scidata[i,:,:], apertures)   
+        #std1ddata[i] = phot_table['aperture_sum'].data[0]
 
     # Aperture photometry with decreasing wavelength pix from startz 
     position = position0
@@ -136,9 +132,10 @@ def std1dspec(infile, startz=2000, nsigma=5, overwrite=False):
         if np.linalg.norm(position-position_pre) > 2.:
             print('\t Cetroid is not good at ' + str(i) + ' pix.')
             break
-        apertures = EllipticalAperture(position, a=a ,b=b,theta=theta)
-        phot_table = aperture_photometry(scidata[i,:,:], apertures)   
-        std1ddata[i] = phot_table['aperture_sum'].data[0]
+        positions[i,:] = position
+        #apertures = EllipticalAperture(position, a=a ,b=b,theta=theta)
+        #phot_table = aperture_photometry(scidata[i,:,:], apertures)   
+        #std1ddata[i] = phot_table['aperture_sum'].data[0]
 
 
     # Plotting the 1D data & selecting the spectral range.
@@ -153,101 +150,21 @@ def std1dspec(infile, startz=2000, nsigma=5, overwrite=False):
     stop = crval + (npix - crpix + 0.5)*cdelt
     lam = np.arange(start ,stop, cdelt)
     
-    coords = np.zeros((2,2))
-    ii=0
-
-    print('\n\t Press any key except \'q\' to specify a required range')
-    
-    def select_range(event):
-        global coords, ii, std1ddata, lam
-        if event.key == 'q':
-            plt.close()
-        elif ii == 0:
-            coords[0,0] = event.xdata
-            coords[0,1] = event.ydata
-            ii = 1
-            print('\t Press any key again except \'q\'')            
-        elif ii == 1:
-            coords[1,0] = event.xdata
-            coords[1,1] = coords[0,1] 
-            plt.plot(coords[:,0], coords[:,1])
-            plt.draw()
-            ii = 2
-            print('\t Press \'q\' to quit, or any other key to redo.')
-        elif ii == 2:
-            plt.cla()
-            plt.plot(lam, std1ddata)
-            plt.draw()
-            coords[0,0] = event.xdata
-            coords[0,1] = event.ydata
-            ii = 1
-            print('\t Press any key except \'q\' to specify a required range')
-        return
-
-    fig=plt.figure()
-    cid = fig.canvas.mpl_connect('key_press_event', select_range)
-    plt.plot(lam,std1ddata)
+    plt.plot(lam,positions[:,0])
     plt.title(object_name)
     plt.xlabel('Lambda (Angstrom)')
-    plt.ylabel('Count')
+    plt.ylabel('X (pix)')
+    plt.grid()
     plt.show()
 
-    num = 0
-    while coords[0,0] > lam[num]:
-        num += 1
-    x1 = num
-    crval = lam[num]
-
-    while coords[1,0]> lam[num]:
-        num += 1
-    x2 = num
-
-    if x1 > x2:
-        temp = x1
-        x1 = x2
-        x2 = temp
-
-    # Saving the output fits file
-    outhdu = fits.PrimaryHDU(data=std1ddata[x1:x2+1])
-    outhdl = fits.HDUList([outhdu])
+    plt.plot(lam,positions[:,1])
+    plt.title(object_name)
+    plt.xlabel('Lambda (Angstrom)')
+    plt.ylabel('Y (pix)')
+    plt.grid()
+    plt.show()
     
-    outhdr = hdl[0].header
-    outhdr['CTYPE1']  = hdl[0].header['CTYPE3'] 
-    outhdr['CRVAL1']  = crval
-    outhdr['CRPIX1']  = 1
-    #outhdr['CDELT1']  = hdl[0].header['CDELT3']
-    outhdr['CD1_1'] = hdl[0].header['CD3_3']
-    outhdr['DISPAXIS'] = 1
-    outhdr['WCSDIM'] = 1
-    
-    outhdr['XSTDDEV'] = (gfit.x_stddev.value, \
-                         'X stddev of the star radial profile')
-    outhdr['YSTDDEV'] = (gfit.y_stddev.value, \
-                         'Y stddev of the star radial profile')
-    outhdr['APNSIG'] = (nsigma, 'Number of sigmas for integration aperture')
-    
-    outhdr.remove('CTYPE2')
-    outhdr.remove('CRVAL2') 
-    outhdr.remove('CRPIX2') 
-    #outhdr.remove('CDELT2') 
-    outhdr.remove('CD2_2')
-    outhdr.remove('LTM2_2')
-    #outhdr.remove('CD1_1')
-    outhdr.remove('LTM1_1')
-    outhdr.remove('CTYPE3')
-    outhdr.remove('CRVAL3') 
-    outhdr.remove('CRPIX3') 
-    #outhdr.remove('CDELT3') 
-    outhdr.remove('CD3_3')
-    outhdr.remove('LTM3_3')
-    
-    outhdl[0].header = outhdr
-    outhdl.writeto(outfile, overwrite=overwrite)
-    print('\t 1D data file: '+outfile)
-
-    outhdl.close()
-    hdl.close()
-    return outfile, True
+    return
 
 
 if __name__ == '__main__':

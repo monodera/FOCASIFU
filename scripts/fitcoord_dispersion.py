@@ -6,11 +6,7 @@ import os
 import focasifu as fi
 from astropy.io import fits
 import argparse
-# Not to display warning.
-temp_stderr = sys.stderr
-sys.stderr = open('/dev/null', 'w')
 from pyraf import iraf
-sys.stderr = temp_stderr  # Back to the stadard error output
 
 
 def fitcoord_dispersion(basenames, overwrite=False):
@@ -24,8 +20,8 @@ def fitcoord_dispersion(basenames, overwrite=False):
 
     database='database'
     function='chebyshev'
-    xorder=7
-    yorder=7
+    xorder=3
+    yorder=5
     logfiles='STDOUT,fitcoord_dispersion.log'
     # for multi-comparison images
     combine = 'yes'
@@ -45,8 +41,11 @@ def fitcoord_dispersion(basenames, overwrite=False):
         else:
             if os.path.isfile(database + '/fc' + fcfile) and overwrite == True:
                 print('Removing ' + fcfile)
-                os.remove(database + '/fc' + fcfile)
-                
+                try:
+                    os.remove(database + '/fc' + fcfile)
+                except:
+                    pass
+                    
             infiles = ''
             for basename in basenames:
                 infiles = infiles + basename + '.ch%02d,'%i
@@ -66,5 +65,6 @@ if __name__ == '__main__':
     parser.add_argument('comparisons', help='Comma-separated comparison basenames')
     parser.add_argument('-o', help='Overwrite flag', dest='overwrite', action='store_true',default=False)
     args = parser.parse_args()
-    
-    fitcoord_dispersion(args.comparisons, overwrite=args.overwrite)
+
+    comparisons = args.comparisons.split(',')
+    fitcoord_dispersion(comparisons, overwrite=args.overwrite)

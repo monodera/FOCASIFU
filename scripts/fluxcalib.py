@@ -7,10 +7,7 @@ import numpy as np
 import sys
 import os
 import focasifu as fi
-temp_stderr = sys.stderr
-sys.stderr = open('/dev/null', 'w')
 from pyraf import iraf
-sys.stderr = temp_stderr  # Back to the stadard error output
 
 
 def fluxcalib_each(infile, outfile, sens, overwrite=False):
@@ -21,15 +18,20 @@ def fluxcalib_each(infile, outfile, sens, overwrite=False):
         print('\t This procedure is skipped.')
         return outfile, True
     if os.path.isfile(outfile) and overwrite:
-        os.remove(outfile)
-    
-    iraf.noao()
-    iraf.twodspec()
-    iraf.longslit()
+        try:
+            os.remove(outfile)
+        except:
+            pass
+            
     tempfile = iraf.mktemp('tmp_')
     iraf.fluxcalib(infile, tempfile, sens, exposure='EXPTIME')
+    
     iraf.extinct(tempfile, outfile, extinct=fi.filibdir+'mkoextinct.dat')
-    os.remove(tempfile+'.fits')
+    try:
+        os.remove(tempfile+'.fits')
+    except:
+        pass
+    
     return outfile, True
 
 

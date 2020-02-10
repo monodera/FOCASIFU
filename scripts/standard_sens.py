@@ -40,8 +40,11 @@ def standard_sens(infile, caldir=')_.caldir', noext=False,
     else:
         if overwrite:
             print('Removing '+std)
-            os.remove(std)
-        
+            try:
+                os.remove(std)
+            except:
+                pass
+            
         iraf.standard(infile, std, extinction=extinction,\
                       caldir=caldir, beam_sw='no', aperture='')
         print('Output file of IRAF STANDARD task: '+std)
@@ -53,8 +56,11 @@ def standard_sens(infile, caldir=')_.caldir', noext=False,
     else:
         if overwrite:
             print('Removing '+sens)
-            os.remove(sens)
-            
+            try:
+                os.remove(sens)
+            except:
+                pass
+                
         iraf.sensfunc(std, sens, aperture='', ignoreaps='yes',\
                       extinction=extinction,\
                       logfile='sensfunc.log')

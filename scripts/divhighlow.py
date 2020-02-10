@@ -40,7 +40,7 @@ def fixbadcolumn(inhdl):
     binfct1 = inhdl[0].header['BIN-FCT1']
     binfct2 = inhdl[0].header['BIN-FCT2']
     badpix = np.array(badpix_dict[str(binfct1)+str(binfct2)])
-    print(badpix.shape)
+
     for i in range(badpix.shape[0]):
         x1 = badpix[i,0]
         x2 = badpix[i,1]

@@ -5,11 +5,12 @@ import os
 import sys
 import argparse
 from astropy.io import fits
-# Not to display warning.
-temp_stderr = sys.stderr
-sys.stderr = open('/dev/null', 'w')
+## Not to display warning.
+## something wrong in python3
+#temp_stderr = sys.stderr
+#sys.stderr = open('/dev/null', 'w')
 from pyraf import iraf
-sys.stderr = temp_stderr  # Back to the stadard error output
+#sys.stderr = temp_stderr  # Back to the stadard error output
 
 import focasifu as fi
 
@@ -108,8 +109,11 @@ def transform(basename, waveref, spatialref, overwrite=False):
             print('\t '+ checkfile +' already exits. Skiped.')
         else:
             if overwrite:
-                os.remove(basename+'.ch%02d.wc.fits'%i)
-
+                try:
+                    os.remove(basename+'.ch%02d.wc.fits'%i)
+                except:
+                    pass
+                    
             iraf.transform(basename+'.ch%02d'%i, basename+'.ch%02d.wc'%i,\
                     waveref+'.ch%02d,'%i+spatialref+'.ch%02dedge'%i,\
                     interpt='linear', database='database',\

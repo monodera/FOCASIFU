@@ -67,8 +67,11 @@ def identify_edge(infile, overwrite=False):
     else:
         if os.path.isfile(idfile) and overwrite:
             print('\t Removing '+idfile)
-            os.remove(idfile)
-        
+            try:
+                os.remove(idfile)
+            except:
+                pass
+            
         print('\t Identifying: '+ basename + '.ch01edge.fits')
         iraf.identify(basename + '.ch01edge',
                       section=section, database=database,
@@ -96,8 +99,10 @@ def identify_edge(infile, overwrite=False):
         else:
             if os.path.isfile(idfile) and overwrite:
                 print('\t Removing '+idfile)
-                os.remove(idfile)
-
+                try:
+                    os.remove(idfile)
+                except:
+                    pass
             # treatment for VPH650
             if i == 12:
                 disperser = fits.getval(basename+'.ch12edge.fits', 'DISPERSR')

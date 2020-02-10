@@ -52,14 +52,11 @@ def mkcube(basename, postfix, overwrite = False):
 
     # FITS header treatment
     #binfac1 = inhdr['BIN-FCT1']
-    xpixscale = 0.1075 #arcsec/pix
-    ypixscale = 0.435 #arcsec/pix
 
     outhdr['WCSDIM'] = 3
     outhdr['CUNIT3'] = inhdr['CUNIT2']
     outhdr['CTYPE3'] = 'LINEAR  '
     outhdr['CRVAL3'] = inhdr['CRVAL2']
-    outhdr['CDELT3'] = inhdr['CDELT2']
     outhdr['CRPIX3'] = inhdr['CRPIX2']
     outhdr['CD3_3'] = inhdr['CD2_2']
     outhdr['LTM3_3'] = inhdr['LTM2_2']
@@ -112,17 +109,30 @@ def mkcube(basename, postfix, overwrite = False):
                  [np.sin(theta), np.cos(theta)]])
     
     # Creating the new CD matrix for the reconstruction image
+    xpixscale = 0.1075 #arcsec/pix
+    ypixscale = 0.435 #arcsec/pix
     xscale = xpixscale * binfct1 / 3600.0
     yscale = -ypixscale / 3600.0
-    #xscale = -xpixscale * binfct1 / 3600.0
-    #yscale = ypixscale / 3600.0
+    
     outhdr['CD1_1'] = rot[0,0] * xscale
     outhdr['CD1_2'] = rot[0,1] * yscale
     outhdr['CD2_1'] = rot[1,0] * xscale
     outhdr['CD2_2'] = rot[1,1] * yscale
 
-    outhdr.remove('CDELT1')
-    outhdr.remove('CDELT2')
+    outhdr.remove('C2VAL1')
+    outhdr.remove('C2VAL2')
+    outhdr.remove('C2PIX1')
+    outhdr.remove('C2PIX2')
+    outhdr.remove('C2ELT1')
+    outhdr.remove('C2ELT2')
+    outhdr.remove('P2001001')
+    outhdr.remove('P2001002')
+    outhdr.remove('P2002001')
+    outhdr.remove('P2002002')
+    outhdr.remove('C2YPE1')
+    outhdr.remove('C2YPE2')
+    outhdr.remove('C2NIT1')
+    outhdr.remove('C2NIT2')
 
     outhdr['RADESYSa']='FK5'
     outhdl[0].header = outhdr

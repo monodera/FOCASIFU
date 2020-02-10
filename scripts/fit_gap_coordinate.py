@@ -20,7 +20,10 @@ def fit_gap_coordinate(infile, overwrite=False):
     gapcoef_file = os.path.splitext(infile)[0]+'.gapcoef'
     if os.path.exists(gapcoef_file):
         if overwrite:
-            os.remove(gapcoef_file)
+            try:
+                os.remove(gapcoef_file)
+            except:
+                pass
         else:
             print('\t Coefficiet file already exists: ' + gapcoef_file)
             print('\t This precedure is skipped.')

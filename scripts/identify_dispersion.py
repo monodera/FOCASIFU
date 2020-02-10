@@ -9,18 +9,15 @@ import subprocess
 import focasifu as fi
 from astropy.io import fits
 import argparse
-# Not to display warning.
-temp_stderr = sys.stderr
-sys.stderr = open('/dev/null', 'w')
 from pyraf import iraf
-sys.stderr = temp_stderr  # Back to the stadard error output
+
 
 def reidentify_each(refname, inname, database='database', \
                     coordlist=fi.filibdir+'thar.300.dat', \
                     overwrite=False):
     verbose='yes'
     nsum=10
-    match=-3.
+    match=-10.
     fwidth=4.
     cradius=5.
     threshold=0.
@@ -51,7 +48,10 @@ def reidentify_each(refname, inname, database='database', \
     else:
         if os.path.isfile(idfile) and overwrite == True:
             print('Removing ' + idfile)
-            os.remove(idfile)
+            try:
+                os.remove(idfile)
+            except:
+                pass
 
         cdelt = fits.getval(inname+'.fits', 'CDELT2')
         # Derivering shift with respect to the reference.
@@ -60,7 +60,7 @@ def reidentify_each(refname, inname, database='database', \
         indata = fits.getdata(inname+'.fits')
         y_in = np.mean(indata[:,45:55], axis=1)
         shift = fi.cross_correlate(y_in, y_ref, sep=0.1, fit=False) 
-        #print('%s - %s; %.2f pix'%(refname, inname, shift))
+        print('%s - %s; %.2f pix'%(refname, inname, shift))
 
         print('\t reidentify '+inname)
         iraf.reidentify(refname, inname, interac='no',
@@ -69,7 +69,7 @@ def reidentify_each(refname, inname, database='database', \
                 nlost=nlost, cradius=cradius, threshold=threshold,
                 addfeatures=addfeatures, coordlist=coordlist, match=match,
                 database=database, logfile=logfile, plotfile='',
-                verbose=verbose, cursor='')
+                        verbose=verbose, cursor='')
 
         #Check the result
         iraf.identify(inname, section='middle column',
@@ -77,7 +77,7 @@ def reidentify_each(refname, inname, database='database', \
                 nsum=nsum, match=match, ftype='emission', fwidth=fwidth,
                 cradius=cradius, threshold=threshold,
                 function='chebyshev', order=order, sample='*',
-                niter=niter, autowrite=autowrite)
+                      niter=niter, autowrite=autowrite, cursor='')
 
         iraf.reidentify(inname, inname,
                 interac='no', section='middle column', newaps=newaps,
@@ -205,8 +205,8 @@ def identify_dispersion_each(basename, num, overwrite=False):
     if datatype == 'OBJECT':
         num = 0
         dispname = dispname + '_SKY'
-        referenceimage = 'sky.png'
-        coordlist = fi.filibdir+'skyline_midres.dat'
+        referenceimage = 'ifu_sky.png'
+        coordlist = fi.filibdir+'ifu_skyline.dat'
     
     # showing the identification example image
     proc = subprocess.Popen(['showimage.py',fi.filibdir + referenceimage])

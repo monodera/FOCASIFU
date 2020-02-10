@@ -1,16 +1,12 @@
 #!/usr/bin/env python
 # python3 OK
-# USAGE: flat_combine <comma-separated basenames>
+
 import focasifu as fi
 import argparse
 from astropy.io import fits
 import os
 import sys
-# Not to display warning.
-temp_stderr = sys.stderr
-sys.stderr = open('/dev/null', 'w')
 from pyraf import iraf
-sys.stderr = temp_stderr  # Back to the stadard error output
 
 def flat_combine(infiles_comma, overwrite=False):
     print('\n#############################')
@@ -19,7 +15,10 @@ def flat_combine(infiles_comma, overwrite=False):
     combinedname = fits.getval(infiles[0],'FRAMEID')+'.fcmb.fits'
     if os.path.exists(combinedname):
         if overwrite:
-            os.remove(combinedname)
+            try:
+                os.remove(combinedname)
+            except:
+                pass
         else:
             print('\t Combined flat frame already exists. '+combinedname)
             print('\t This precedure is skipped.')

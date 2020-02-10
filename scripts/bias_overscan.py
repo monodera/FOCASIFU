@@ -268,20 +268,23 @@ def bias_overscan(ifname, rawdatadir='', overwrite = False):
     print('bias subtraction, overscan region removing, '+\
           'hedear correction')
 
-    basename = fits.getval(rawdatadir+ifname, 'FRAMEID')
+    pathandfile = os.path.join(rawdatadir, ifname)
+    print(pathandfile)
+    hdl = fits.open(pathandfile)
+    basename = hdl[0].header['FRAMEID']
     ovname = basename+'.ov.fits'
     if os.path.isfile(ovname) and not overwrite:
         print('\t Output file already exits. '+ ovname)
         print('\t This procedure is skipped.')
+        hdl.close()
         return ovname, True
 
-    hdl = fits.open(rawdatadir+ifname)
-    hdl, stat = bias_subtraction(hdl)
+    hdlbs, stat = bias_subtraction(hdl)
     if stat == False:
         hdl.close()
         return ovname, False
 
-    hdl_right, stat = remove_overscan(hdl)
+    hdl_right, stat = remove_overscan(hdlbs)
     if stat == False:
         hdl.close()
         return ovname, False
@@ -289,15 +292,16 @@ def bias_overscan(ifname, rawdatadir='', overwrite = False):
     hdl.close()
     
     ifname = str('FCSA%08d.fits'%(int(basename[4:])+1))
-    hdl = fits.open(rawdatadir+ifname)
+    pathandfile = os.path.join(rawdatadir, ifname)
+    hdl = fits.open(pathandfile)
     hdl = fi.put_version(hdl)
     
-    hdl, stat = bias_subtraction(hdl)
+    hdlbs, stat = bias_subtraction(hdl)
     if stat == False:
         hdl.close()
         return ovname, False
     
-    hdl_left, stat = remove_overscan(hdl)
+    hdl_left, stat = remove_overscan(hdlbs)
     if stat == False:
         hdl.close()
         return ovname, False

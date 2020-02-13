@@ -8,6 +8,8 @@ import sys
 import os
 import focasifu as fi
 from pyraf import iraf
+from astropy.io import fits
+from transform import padding
 
 
 def fluxcalib_each(infile, outfile, sens, overwrite=False):
@@ -22,11 +24,21 @@ def fluxcalib_each(infile, outfile, sens, overwrite=False):
             os.remove(outfile)
         except:
             pass
-            
+
+    # Flux calibration
     tempfile = iraf.mktemp('tmp_')
     iraf.fluxcalib(infile, tempfile, sens, exposure='EXPTIME')
-    
+
+    # Atmospheric extinction correction
     iraf.extinct(tempfile, outfile, extinct=fi.filibdir+'mkoextinct.dat')
+    
+    # Changing BUNIT to 10^-20 erg/s/cm2/A
+    hdl = fits.open(outfile, mode='update')
+    hdl[0].data = hdl[0].data * 1e20
+    padding(hdl[0].data, blank=np.nan)
+    hdl[0].header['BUNIT'] = '1E-20 erg/s/cm2/A'
+    hdl.close()
+
     try:
         os.remove(tempfile+'.fits')
     except:

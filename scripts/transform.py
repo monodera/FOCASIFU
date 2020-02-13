@@ -4,6 +4,7 @@
 import os
 import sys
 import argparse
+import numpy as np
 from astropy.io import fits
 ## Not to display warning.
 ## something wrong in python3
@@ -11,8 +12,26 @@ from astropy.io import fits
 #sys.stderr = open('/dev/null', 'w')
 from pyraf import iraf
 #sys.stderr = temp_stderr  # Back to the stadard error output
-
 import focasifu as fi
+
+
+def padding(data, blank=np.nan):
+    # Padding 0-value pixel around edges with the specified blank value.
+    for j in range(data.shape[1]):
+        y = 0
+        while data[y,j] == 0.0:
+            data[y,j] = blank
+            y = y + 1
+            if y > data.shape[0] -1:
+                break
+        y = data.shape[0] - 1
+        while data[y,j] == 0.0:
+            data[y,j] = blank
+            y = y - 1
+            if y < 0:
+                break
+    return
+
 
 def transform(basename, waveref, spatialref, overwrite=False):
     # input: input fits file basename to be corrected.
@@ -119,7 +138,7 @@ def transform(basename, waveref, spatialref, overwrite=False):
                     interpt='linear', database='database',\
                     x1=1.0, x2='INDEF', dx=1.0, nx=int(200.0/binfct1), xlog='no',\
                     y1=y1, y2='INDEF', dy=dy, ny=ny,ylog='no',\
-                    flux='no', blank=0.0, logfile='transform.log')
+                    flux='no', blank=0, logfile='transform.log')
 
             hdl = fits.open(basename+'.ch%02d.wc.fits'%i, mode='update')
             hdl[0].header['COMPBASE']=(waveref, \
@@ -127,6 +146,9 @@ def transform(basename, waveref, spatialref, overwrite=False):
             hdl[0].header['DISTBASE']=(spatialref, \
                                     'Frame ID used for distortion correction.')
             hdl[0].header['CUNIT2']=('Angstrom')
+
+            # Padding NaN for blank pixels.
+            padding(hdl[0].data, blank=np.nan)
             hdl.close()
             print('\t '+ basename+'.ch%02d.wc.fits was created.'%i)
 

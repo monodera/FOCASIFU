@@ -10,7 +10,7 @@ from astropy.modeling.fitting import LevMarLSQFitter
 import copy
 import warnings
 
-version = 20200210
+version = 20190213
 filibdir = os.path.dirname(os.path.abspath(__file__))+'/../lib/'
 chimagedir = 'chimages/'
 bias_template_file = 'bias_template'

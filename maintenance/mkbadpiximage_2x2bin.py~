@@ -4,7 +4,7 @@ import numpy as np
 import focasifu as fi
 import os
 
-file = fi.filibdir+'dustposition1_2x2.fits'
+file = fi.filibdir+'dastposition1_2x2.fits'
 if os.path.exists(file):
     print('Do you want to overwrite %s? :[y/n]'%file)
     key = raw_input()

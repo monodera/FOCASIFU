@@ -7,10 +7,12 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 from astropy.modeling.models import Gaussian1D
 from astropy.modeling.fitting import LevMarLSQFitter
+import scipy.signal as sg
 import copy
 import warnings
 
-version = 20190213
+version = 20201003
+
 filibdir = os.path.dirname(os.path.abspath(__file__))+'/../lib/'
 chimagedir = 'chimages/'
 bias_template_file = 'bias_template'
@@ -109,8 +111,8 @@ def check_version(hdl):
         if hdl[0].header[ifu_soft_key] != version and \
            hdl[0].header[ifu_soft_key] != int(version):
             print('Inconsistent software version!')
-            print('This script veision: ' + version)
-            print('Fits file: ' + hdl[0].header[ifu_soft_key])
+            print('This script veision: ' + str(version))
+            print('Fits file: ' + str(hdl[0].header[ifu_soft_key]))
             return False
     else:
         print('This has never been reduced by FOACSIFU.')
@@ -155,7 +157,7 @@ def cross_correlate(indata, refdata, sep=0.01, kind='cubic', fit=False, \
     else:
         refsub = refnew
     
-    corr = np.correlate(insub, refsub, 'full')
+    corr = sg.correlate(insub, refsub, mode='full', method='auto')
     delta = corr.argmax() - (len(insub) - 1)
     delta = delta * sep
 

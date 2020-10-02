@@ -11,7 +11,7 @@ from scipy.ndimage.interpolation import shift as imshift
 import matplotlib.pyplot as plt
 
 
-def flatfielding(infile, domeflat, calflat, domecomp, comp, overwrite=False):
+def flatfielding(infile, domeflat, calflat, domecomp=None, comp=None, overwrite=False):
     print('\n#############################')
     print('Flat fielding.')
    
@@ -57,14 +57,16 @@ def flatfielding(infile, domeflat, calflat, domecomp, comp, overwrite=False):
     cal1d = np.mean(caldata[y1:y2,x1:x2], axis=0)
     dx = fi.cross_correlate(cal1d, dome1d, sep=0.01, fit=True, niteration=3, \
                             high_nsig=1.0, low_nsig=1.0)
-    
+
     # Getting Y shift
-    x1_2 = int(1100*2/binfac1)
-    comp_data = fits.getdata(comp+'.ov.fits')
-    domecomp_data = fits.getdata(domecomp+'.ov.fits')
-    comp1d = np.mean(comp_data[:,x1_2:x1_2+10], axis=1)
-    domecomp1d = np.mean(domecomp_data[:,x1_2-int(dx+0.5):x1_2+10-int(dx+0.5)], axis=1)
-    dy = fi.cross_correlate(comp1d, domecomp1d, sep=0.1, fit=False)
+    dy=0.0
+    if domecomp != None:
+        x1_2 = int(1100*2/binfac1)
+        comp_data = fits.getdata(comp+'.ov.fits')
+        domecomp_data = fits.getdata(domecomp+'.ov.fits')
+        comp1d = np.mean(comp_data[:,x1_2:x1_2+10], axis=1)
+        domecomp1d = np.mean(domecomp_data[:,x1_2-int(dx+0.5):x1_2+10-int(dx+0.5)], axis=1)
+        dy = fi.cross_correlate(comp1d, domecomp1d, sep=0.1, fit=False)
     
     print('\t Low freqency flat is shifted: dX=' + str(dx)[:5] + ' dY=' + str(dy)[:5])
     
@@ -82,17 +84,18 @@ def flatfielding(infile, domeflat, calflat, domecomp, comp, overwrite=False):
     plt.show()
 
     
-    shifteddomecompdata = imshift(domecomp_data[:,x1_2-50:x1_2+60], (dy,dx), order=5, mode='nearest')
-    shifteddomecomp1d = np.mean(shifteddomecompdata[:,50:60], axis=1)
-    plt.plot(comp1d,label='Comparison at object direction')
-    plt.plot(domecomp1d,label='Comparison before shift')
-    plt.plot(shifteddomecomp1d,label='Comparison after shift')
-    plt.title('Y shift check')
-    plt.xlabel('Y')
-    plt.ylabel('Count')
-    plt.legend()
-    plt.grid()
-    plt.show()
+    if domecomp != None:
+        shifteddomecompdata = imshift(domecomp_data[:,x1_2-50:x1_2+60], (dy,dx), order=5, mode='nearest')
+        shifteddomecomp1d = np.mean(shifteddomecompdata[:,50:60], axis=1)
+        plt.plot(comp1d,label='Comparison at object direction')
+        plt.plot(domecomp1d,label='Comparison before shift')
+        plt.plot(shifteddomecomp1d,label='Comparison after shift')
+        plt.title('Y shift check')
+        plt.xlabel('Y')
+        plt.ylabel('Count')
+        plt.legend()
+        plt.grid()
+        plt.show()
 
     # Dividing the input image with the shifted low frequency flat image
     tempdata = inhdl[0].data / shiftedlowdata

@@ -15,23 +15,6 @@ from pyraf import iraf
 import focasifu as fi
 
 
-def padding(data, blank=np.nan):
-    # Padding 0-value pixel around edges with the specified blank value.
-    for j in range(data.shape[1]):
-        y = 0
-        while data[y,j] == 0.0:
-            data[y,j] = blank
-            y = y + 1
-            if y > data.shape[0] -1:
-                break
-        y = data.shape[0] - 1
-        while data[y,j] == 0.0:
-            data[y,j] = blank
-            y = y - 1
-            if y < 0:
-                break
-    return
-
 
 def transform(basename, waveref, spatialref, overwrite=False):
     # input: input fits file basename to be corrected.
@@ -141,28 +124,28 @@ def transform(basename, waveref, spatialref, overwrite=False):
                     flux='no', blank=0, logfile='transform.log')
 
             hdl = fits.open(basename+'.ch%02d.wc.fits'%i, mode='update')
+            #hdl.info()
             hdl[0].header['COMPBASE']=(waveref, \
-                                   'Frame ID of the comparison frame.')
+                                       'Frame ID of the comparison frame.')
             hdl[0].header['DISTBASE']=(spatialref, \
-                                    'Frame ID used for distortion correction.')
+                                       'Frame ID used for distortion correction.')
             hdl[0].header['CUNIT2']=('Angstrom')
-
-            # Padding NaN for blank pixels.
-            padding(hdl[0].data, blank=np.nan)
-            hdl.close()
             print('\t '+ basename+'.ch%02d.wc.fits was created.'%i)
 
+        
     print('\t Going back to the original directory.')
     os.chdir('..')
     return True
 
 
 if __name__ == '__main__':
-    parser=argparse.ArgumentParser(description='This is the script for transforming the image.')
+    parser=argparse.ArgumentParser(description='This is the script'+
+                                   ' for transforming the image.')
     parser.add_argument('infile', help='Input file basename')
     parser.add_argument('comp', help='Comparison frame basename')
     parser.add_argument('cflat', help='Calflat frame basename')
-    parser.add_argument('-o', help='Overwrite flag', dest='overwrite', action='store_true',default=False)
+    parser.add_argument('-o', help='Overwrite flag', dest='overwrite',
+                        action='store_true',default=False)
     args = parser.parse_args()
 
     transform(args.infile, args.comp, args.cflat, overwrite=args.overwrite)

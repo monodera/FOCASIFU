@@ -30,12 +30,12 @@ def object(infile, domeflat=None, domecomp=None, calflat=None,
     crname, maskname, stat = cosmicrays(ovname, overwrite=overwrite)
     if stat == False:
         return crname, False
-
+    
     # flat fielding
     bias_overscan(domecomp+'.fits', rawdatadir=rawdatadir,
                       overwrite=overwrite)
-    ffname, stat = flatfielding(crname, domeflat, calflat, domecomp,
-                                comparison, overwrite=overwrite)
+    ffname, stat = flatfielding(crname, domeflat, calflat, domecomp=domecomp,
+                                comp=comparison, overwrite=overwrite)
     if stat == False:
         return ffname, False
 
@@ -43,7 +43,7 @@ def object(infile, domeflat=None, domecomp=None, calflat=None,
     basename, stat = mkchimage(ffname, calflat, overwrite=overwrite)
     if stat == False:
         return basename, False
-    
+
     # Transorming
     stat = transform(basename, comparison, calflat, overwrite=overwrite)
     if stat == False:
@@ -65,7 +65,7 @@ def object(infile, domeflat=None, domecomp=None, calflat=None,
         return cubefile, False
 
     # Sky subtraction
-    skysubedfile, stat = skysub(cubefile, overwrite=overwrite)
+    skysubedfile, stat = skysub(cubefile, comparison, overwrite=overwrite)
     if stat == False:
         return skysubedfile, False
 
@@ -79,8 +79,8 @@ if __name__ == '__main__':
     parser.add_argument('dflatid', help='Domeflat frame ID')
     parser.add_argument('cflatid', help='Calflat frame ID')
     parser.add_argument('compid', help='Comparison frame ID')
-    parser.add_argument('domecompid', help='Comparison frame ID for domeflat')
-    parser.add_argument('stdstarid', help='Standard star frame ID')
+    parser.add_argument('-domecompid', help='Comparison frame ID for domeflat', default=None)
+    parser.add_argument('-stdstarid', help='Standard star frame ID', default=None)
     parser.add_argument('-d', help='Raw data directroy', dest='rawdatadir', 
                         action='store', default='')
     parser.add_argument('-o', help='Overwrite flag', dest='overwrite', 
